@@ -1,6 +1,6 @@
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import Handlers from "./imports/HandlersIndex.js"
 
 export class PacketHandler {
     constructor(bot) {
@@ -10,10 +10,8 @@ export class PacketHandler {
     }
 
     async init () {
-        const files = fs.readdirSync(this.handlersPath).filter(file => file.endsWith('.js'));
 
-        for (const file of files) {
-            const handler = await import(`file://${path.join(this.handlersPath, file)}`);
+        for (const handler of Handlers) {
             if (handler.default?.name && handler.default?.execute) {
                 this.handlers.set(handler.default.name, handler.default);
             }
