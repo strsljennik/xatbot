@@ -1,6 +1,6 @@
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import Commands from "./imports/CommandsIndex.js"
 
 export class CommandHandler {
     constructor(bot) {
@@ -10,10 +10,8 @@ export class CommandHandler {
     }
 
     async init () {
-        const files = fs.readdirSync(this.commandsPath).filter(file => file.endsWith('.js'));
 
-        for (const file of files) {
-            const command = await import(`file://${path.join(this.commandsPath, file)}`);
+        for (const command of Commands) {
             if (command.default?.name && command.default?.execute) {
                 this.commands.set(command.default.name, command.default);
             }
