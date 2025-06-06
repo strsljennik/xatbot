@@ -1,28 +1,38 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
-import Handlers from "./imports/HandlersIndex.js"
+import Handlers from "../handlers/_all.js"
 
 export class PacketHandler {
+    /**
+     * Creates a PacketHandler instance.
+     * @param {Object} bot Bot instance.
+     */
     constructor(bot) {
         this.bot = bot;
         this.handlers = new Map();
-        this.handlersPath = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'handlers');
     }
 
+    /**
+     * Initializes the packet handler by loading all handlers.
+     * @return {Promise<void>}
+     */
     async init () {
-
         for (const handler of Handlers) {
-            if (handler.default?.name && handler.default?.execute) {
-                this.handlers.set(handler.default.name, handler.default);
+            const { name, execute } = handler;
+            if (name && typeof execute === 'function') {
+                this.handlers.set(name.toLowerCase(), handler);
             }
         }
     }
 
+    /**
+     * Handles a packet by type.
+     * @param {string} type Packet type name.
+     * @param {Object} packet Packet data.
+     * @return {Promise<void>}
+     */
     async handle (type, packet) {
-        const handler = type.toLowerCase();
-
-        if (this.handlers.has(handler)) {
-            await this.handlers.get(handler).execute(this.bot, packet);
+        const handlerName = type.toLowerCase();
+        if (this.handlers.has(handlerName)) {
+            await this.handlers.get(handlerName).execute(this.bot, packet);
         }
     }
 }

@@ -57,6 +57,20 @@ export const unsanitize = (data) => {
 };
 
 /**
+ * Runs a callback at a given interval only if bot is connected.
+ * @param {function} fn - The async function to run
+ * @param {object} bot - The bot instance
+ * @param {number} interval - Interval in ms
+ */
+export function runIfConnected(fn, bot, interval) {
+    setInterval(async () => {
+        if (bot.state.isConnected && bot.state.ws) {
+            await fn();
+        }
+    }, interval);
+}
+
+/**
  * Fixes the user id.
  * @param {string} id
  * @returns {number}

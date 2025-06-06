@@ -13,7 +13,7 @@ export default {
 
         if (!message) {
             return await bot.reply(
-                `The current pstyle is: ${bot.settings.pstyle_image || "Not set"}`,
+                `The current pstyle is: ${bot.state.settings.pstyle_image || "Not set"}`,
                 xatID,
                 from
             );

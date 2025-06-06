@@ -9,7 +9,7 @@ export default {
     async execute (bot, packet) {
         if (
             ['/u', '/k', '/g'].includes(packet.t?.substr(0, 2)) &&
-            packet.d === bot.loginInfo.i
+            packet.d === bot.state.loginInfo.i
         ) {
             await bot.restart();
         }

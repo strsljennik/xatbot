@@ -11,7 +11,7 @@ export default {
     async execute (bot, packet) {
         if (packet.t[0] === "/") return;
 
-        if (packet.t[0] === bot.settings.char) {
+        if (packet.t[0] === bot.state.settings.char) {
             await bot.commandHandler.handle(
                 packet.t,
                 parseUser(packet.u),

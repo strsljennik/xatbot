@@ -13,8 +13,8 @@ export default {
 
         if (!message) {
             return await bot.reply(
-                bot.settings.pcback
-                    ? `The current pcback is: *${bot.settings.pcback}*. To update it, send *!pcback [url]*. To clear, send *!pcback clear*.`
+                bot.state.settings.pcback
+                    ? `The current pcback is: *${bot.state.settings.pcback}*. To update it, send *!pcback [url]*. To clear, send *!pcback clear*.`
                     : `Your pcback is currently empty. To update it, send *!pcback [message]*.`,
                 xatID,
                 from

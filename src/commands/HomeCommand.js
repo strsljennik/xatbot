@@ -13,8 +13,8 @@ export default {
 
         if (!message) {
             return await bot.reply(
-                bot.settings.home
-                    ? `The current home is: *${bot.settings.home}*. To update it, send *!home [message]*. To clear, send *!home clear*.`
+                bot.state.settings.home
+                    ? `The current home is: *${bot.state.settings.home}*. To update it, send *!home [message]*. To clear, send *!home clear*.`
                     : `Your home is currently empty. To update it, send *!home [message]*.`,
                 xatID,
                 from

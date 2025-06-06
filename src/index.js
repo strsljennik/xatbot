@@ -4,11 +4,8 @@ import { Bot } from './core/Bot.js';
 
 config();
 
-const startApp = async () => {
+(async () => {
     await sequelize.authenticate();
-    await sequelize.sync({ force: false });
-
+    await sequelize.sync();
     new Bot();
-};
-
-startApp();
+})();

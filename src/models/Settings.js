@@ -2,6 +2,18 @@ import { DataTypes } from "sequelize";
 import { sequelize } from "../core/Database.js";
 
 export const Settings = sequelize.define("settings", {
+    maxKicks: {
+        type: DataTypes.INTEGER,
+        defaultValue: 3
+    },
+    banDurationHours: {
+        type: DataTypes.INTEGER,
+        defaultValue: 1
+    },
+    modFilters: {
+        type: DataTypes.STRING,
+        defaultValue: "on"
+    },
     char: {
         type: DataTypes.STRING,
         defaultValue: "!"
@@ -12,7 +24,7 @@ export const Settings = sequelize.define("settings", {
     },
     welcome_type: {
         type: DataTypes.STRING,
-        defaultValue: "pc"
+        defaultValue: "pm"
     },
     nick: {
         type: DataTypes.STRING,

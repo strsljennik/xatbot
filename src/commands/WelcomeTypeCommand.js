@@ -13,7 +13,7 @@ export default {
 
         if (!message) {
             return await bot.reply(
-                `The current welcome type is: *${bot.settings.welcome_type.toUpperCase()}*. To change, use *!welcome PC* or *!welcome PM*.`,
+                `The current welcome type is: *${bot.state.settings.welcome_type.toUpperCase()}*. To change, use *!welcome PC* or *!welcome PM*.`,
                 xatID,
                 from
             );

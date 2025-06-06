@@ -13,7 +13,7 @@ export default {
 
         if (!message) {
             return await bot.reply(
-                `The current welcome message is: ${welcomeMsg}. Options: {chatname} {chatid} {user} {name} {uid}.`,
+                `The current welcome message is: ${bot.state.settings.welcome_msg}. Options: {chatname} {chatid} {user} {name} {uid}.`,
                 xatID,
                 from
             );

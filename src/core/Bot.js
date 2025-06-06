@@ -1,41 +1,27 @@
-import { WebSocket } from "ws";
-import { createLogger, format, transports } from "winston";
 import { promises as fs } from "fs";
+import { setupLogger } from "../services/logger.js";
+import { BotState } from "../services/state.js";
+import { WebSocketData } from "../services/websocket.js";
 import { XatBlogAPI } from "../api/XatBlogAPI.js";
-import { xmlToArray, sanitize } from "../utils/helpers.js";
+import { sanitize, runIfConnected } from "../utils/helpers.js";
 import { PacketHandler } from "./PacketHandler.js";
 import { CommandHandler } from "./CommandHandler.js";
 import { Settings } from "../models/Settings.js";
+import { OpenAI } from "../api/OpenAI.js";
 
 export class Bot {
     /**
      * Initializes the bot instance, handlers and WebSocket.
      */
     constructor() {
-        this.setupLogger();
+        this.logger = setupLogger();
+        this.state = new BotState();
 
+        this.OpenAI = new OpenAI(this.state);
         this.xatBlogAPI = new XatBlogAPI();
+
         this.packetHandler = new PacketHandler(this);
         this.commandHandler = new CommandHandler(this);
-
-        this.ws = null;
-        this.isLoggingIn = false;
-        this.isConnected = false;
-        this.users = new Map();
-        this.chatInfo = {};
-        this.loginInfo = {};
-        this.settings = {};
-        this.commands = {};
-
-        this.envData = {
-            username: process.env.BOT_USER,
-            apiKey: process.env.BOT_APIKEY,
-            chat: process.env.BOT_CHAT,
-            websocketUrl: process.env.WEBSOCKET_URL,
-            websocketOrigin: process.env.WEBSOCKET_ORIGIN,
-            owners: JSON.parse(process.env.BOT_OWNERS),
-            disabledPowers: JSON.parse(process.env.DISABLED_POWERS),
-        };
 
         this.init();
     }
@@ -48,12 +34,12 @@ export class Bot {
         try {
             await this.getFromDb();
 
-            if (!this.settings) {
+            if (!this.state.settings) {
                 await Settings.create({ id: 1 });
                 await this.getFromDb();
             }
 
-            await this.getChatInfo();            
+            await this.getChatInfo();
 
             await this.packetHandler.init();
             await this.commandHandler.init();
@@ -78,9 +64,9 @@ export class Bot {
         } catch { }
 
         if (loginData?.i === undefined) {
-            this.isLoggingIn = true;
+            this.state.isLoggingIn = true;
         } else {
-            this.loginInfo = loginData;
+            this.state.loginInfo = loginData;
         }
     }
 
@@ -89,51 +75,7 @@ export class Bot {
      * @param {number} room - Chat ID
      */
     async connect (room = 0) {
-        if (this.isConnected) return;
-        if (this.isLoggingIn) room = 3;
-
-        const ws = new WebSocket(this.envData.websocketUrl, {
-            headers: {
-                "Origin": this.envData.websocketOrigin,
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            },
-        });
-
-        // Websocket is connected
-        ws.on("open", async () => {
-            this.isConnected = true;
-            this.ws = ws;
-            await this.send("y", {
-                r: room > 0 ? room : this.chatInfo.id,
-                v: 0,
-                u: this.loginInfo.i || 2,
-            });
-        });
-
-        //  Websocket got a message
-        ws.on("message", async (data) => {
-            try {
-                this.logger.info(`<< ${data}`);
-                const packets = xmlToArray(data.toString());
-                for (const [type, packet] of packets) {
-                    await this.packetHandler.handle(type, packet);
-                }
-            } catch (error) {
-                this.logger.error(`Packet error: ${error.message} - ${error.stack}`);
-            }
-        });
-
-        // Websocket got closed
-        ws.on("close", () => {
-            this.logger.info("Connection closed");
-            this.isConnected = false;
-        });
-
-        // Websocket got an error
-        ws.on("error", (error) => {
-            this.logger.error(`WebSocket error: ${error.message} - ${error.stack}`);
-            this.isConnected = false;
-        });
+        this.state.ws = WebSocketData(this, room);
     }
 
     /**
@@ -142,7 +84,7 @@ export class Bot {
      * @param {object} data - Packet data
      */
     async send (name, data) {
-        if (!this.ws) return;
+        if (!this.state.ws) return;
 
         try {
             let packet = `<${name} `;
@@ -154,7 +96,7 @@ export class Bot {
             }
             packet += packet.endsWith(" ") ? "/>" : " />";
             this.logger.info(`>> ${packet}`);
-            this.ws.send(packet + "\x00");
+            this.state.ws.send(packet + "\x00");
         } catch (error) {
             this.logger.error(`Send error: ${error.message} - ${error.stack}`);
         }
@@ -164,12 +106,12 @@ export class Bot {
      * Retrieves about the current chat.
      */
     async getChatInfo () {
-        const data = await this.xatBlogAPI.chatInfo(this.envData.chat);
+        const data = await this.xatBlogAPI.chatInfo(this.state.envData.chat);
         if (!data?.chat?.id) {
             this.logger.error("Chat not found");
             process.exit(1);
         }
-        this.chatInfo = data.chat;
+        this.state.chatInfo = data.chat;
     }
 
     /**
@@ -196,7 +138,7 @@ export class Bot {
             u: userId,
             t: message,
             s: 2,
-            d: this.loginInfo.i,
+            d: this.state.loginInfo.i,
         });
     }
 
@@ -219,7 +161,7 @@ export class Bot {
     async sendMessage (message) {
         await this.send("m", {
             t: message,
-            u: this.loginInfo.i,
+            u: this.state.loginInfo.i,
         });
     }
 
@@ -228,8 +170,8 @@ export class Bot {
      */
     async restart () {
         await this.send("C", {});
-        this.isConnected = false;
-        this.ws.terminate();
+        this.state.isConnected = false;
+        this.state.ws.terminate();
         this.connect();
     }
 
@@ -238,7 +180,7 @@ export class Bot {
      */
     async relogin () {
         await this.send("v", {
-            n: this.loginInfo.i,
+            n: this.state.loginInfo.i,
             p: 0,
         });
     }
@@ -247,7 +189,7 @@ export class Bot {
      * Load data from settings.
      */
     async getFromDb () {
-        this.settings = await Settings.findOne({
+        this.state.settings = await Settings.findOne({
             where: { id: 1 }
         });
     }
@@ -268,48 +210,143 @@ export class Bot {
     }
 
     /**
-     * Keeps the bot running and run tasks.
+     * Kicks a user.
+     * @param {number} userId - User ID to kick.
+     * @param {string} [reason=''] - Reason for kick.
+     * @param {string} [sound=''] - Optional sound string.
      */
-    async keepRunning () {
-        setInterval(async () => {
-            if (this.isConnected && this.ws) {
-                this.ws.ping();
-            }
-        }, 30000);
+    async kick (userId, reason = '', sound = '') {
+        const maxKicks = Number(this.state.settings.maxKicks);
+        const banDurationHours = Number(this.state.settings.banDurationHours);
+        const user = this.state.getUser(userId);
 
-        setInterval(async () => {
-            if (this.isConnected && this.ws) {
-                await this.send("c", {
-                    u: this.loginInfo.i,
-                    t: "/KEEPALIVE",
-                });
+        if (!user || user.isMod() || user.isOwner() || user.isMain()) return;
+
+        if (maxKicks > 0 && banDurationHours > 0) {
+            const kicks = this.state.incrementKick(userId);
+            reason += ` [${kicks}/${maxKicks}]`;
+
+            if (kicks >= maxKicks) {
+                this.state.resetKicks(userId);
+                return this.ban(userId, banDurationHours, reason);
             }
-        }, 900000);
+        }
+
+        this.send("c", {
+            p: reason + sound,
+            u: userId,
+            t: '/k'
+        });
     }
 
     /**
-     * Sets up the logger.
+     * Bans a user for a specified number of hours.
+     * @param {number} userId - User ID to ban.
+     * @param {number} hours - Duration in hours.
+     * @param {string} reason - Reason for ban.
+     * @param {string} [type='g'] - Ban type (default global).
+     * @param {string} [gamebanid=''] - Optional gameban ID.
      */
-    setupLogger () {
-        this.logger = createLogger({
-            format: format.combine(
-                format.timestamp({ format: "HH:mm:ss DD-MM-YYYY" }),
-                format.printf(({ timestamp, level, message }) => {
-                    return `[${timestamp}]: ${message}`;
-                })
-            ),
-            transports: [
-                new transports.File({ filename: "./logs/app.log" }),
-                new transports.Console({
-                    format: format.combine(
-                        format.colorize(),
-                        format.printf(({ timestamp, level, message }) => {
-                            return `[${timestamp}]: ${message}`;
-                        })
-                    ),
-                }),
-            ],
+    async ban (userId, hours, reason, type = 'g', gamebanid = '') {
+        if (hours < 0) hours = 1;
+
+        const seconds = hours * 3600;
+
+        const packet = {
+            p: reason,
+            u: userId,
+            t: `/${type}${seconds}`
+        };
+
+        if (gamebanid) packet.w = gamebanid;
+
+        this.send("c", packet);
+    }
+
+    /**
+     * Unbans a user.
+     * @param {number} userId - User ID to unban.
+     */
+    async unban (userId) {
+        this.send("c", {
+            u: userId,
+            t: '/u'
         });
+    }
+
+    /**
+     * Changes a user's rank.
+     * @param {number} userId - User ID.
+     * @param {string} rank - Rank string: 'owner', 'moderator', 'member', 'guest'.
+     */
+    async giveRank (userId, rank) {
+        const rankCmd = {
+            owner: '/M',
+            moderator: '/m',
+            member: '/e',
+            guest: '/r',
+        };
+
+        if (!rankCmd[rank]) return;
+
+        this.send("c", {
+            u: userId,
+            t: rankCmd[rank]
+        });
+    }
+
+    /**
+     * Gives a temporary rank to a user.
+     * @param {number} userId - User ID.
+     * @param {string} rank - Rank string: 'owner', 'moderator', 'member'.
+     * @param {number} hours - Number of hours (1-24).
+     */
+    async giveTempRank (userId, rank, hours) {
+        if (!hours || hours < 1 || hours > 24) hours = 1;
+
+        const rankCmd = {
+            owner: '/mo',
+            moderator: '/m',
+            member: '/mb',
+        };
+
+        if (!rankCmd[rank]) return;
+
+        await this.sendPC(userId, `${rankCmd[rank]}${hours}`);
+    }
+
+    /**
+     * Moderation filter based on OpenAI.
+     * @param {number} userId - User ID
+     * @param {string} message - Message to check
+     */
+    async moderationFilters (userId, message) {
+        if (!message || !userId) return;
+
+        try {
+            const result = await this.OpenAI.moderate(message);
+            const flags = this.OpenAI.constructor.parseModerationResult(result);
+
+            if (flags.isFlagged) {
+                const flagged = Object.entries(flags)
+                    .filter(([k, v]) => k !== 'isFlagged' && v === true)
+                    .map(([k]) => k.replace(/^is/, ''));
+                const reason = `Mod Filter: [${flagged.join(', ') || 'Unknown'}]`;
+                await this.kick(userId, reason);
+            }
+        } catch (e) { }
+    }
+
+    /**
+     * Keeps the bot running and run tasks.
+     */
+    async keepRunning () {
+        runIfConnected(() => this.state.ws.ping(), this, 30000);
+        runIfConnected(() => this.send("ping", []), this, 60000);
+        runIfConnected(() => this.send("c", {
+            u: this.state.loginInfo.i,
+            t: "/KEEPALIVE",
+        }), this, 900000);
     }
 
     /**
@@ -319,7 +356,7 @@ export class Bot {
      * @returns {boolean} - True or False
      */
     hasPermission (uid, from) {
-        const hasPermission = this.envData.owners?.includes(Number(uid));
+        const hasPermission = this.state.envData.owners?.includes(Number(uid));
 
         if (!hasPermission) {
             this.reply(

@@ -9,10 +9,10 @@ export default {
      * @param {object} packet - Packet data
     */
     async execute (bot, packet) {
-        const uid = parseUser(packet.u);
-        if (uid >= 1900000000) return;
+        const userId = parseUser(packet.u);
+        if (userId >= 1900000000) return;
 
         // Remove user from cache
-        bot.users.delete(uid);
+        bot.state.removeUser(userId);
     }
 }

@@ -13,7 +13,7 @@ export default {
 
         if (!message) {
             return await bot.reply(
-                `The current avatar is: ${bot.settings.avatar}`, 
+                `The current avatar is: ${bot.state.settings.avatar}`, 
                 xatID, 
                 from
             );

@@ -13,8 +13,8 @@ export default {
 
         if (!message) {
             return await bot.reply(
-                bot.settings.status
-                    ? `The current status is: *${bot.settings.status}*. To update it, send *!status [message]*. To clear, send *!status clear*.`
+                bot.state.settings.status
+                    ? `The current status is: *${bot.state.settings.status}*. To update it, send *!status [message]*. To clear, send *!status clear*.`
                     : `Your status is currently empty. To update it, send *!status [message]*.`,
                 xatID,
                 from

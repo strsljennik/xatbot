@@ -3,7 +3,7 @@
     "description": "Free xat.com bot created by @xlaming",
     "author": "xlaming",
     "license": "MIT",
-    "version": "1.0.3",
+    "version": "1.0.5",
     "private": true,
     "type": "module",
     "scripts": {
@@ -11,6 +11,7 @@
         "dev": "nodemon src/index.js"
     },
     "dependencies": {
+        "axios": "^1.9.0",
         "dotenv": "^16.3.1",
         "sequelize": "^6.37.5",
         "sqlite3": "^5.1.7",

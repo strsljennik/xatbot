@@ -11,11 +11,11 @@ export default {
     async execute (bot, packet) {
         const uid = parseUser(packet.u);
 
-        if (!bot.users.has(uid)) return;
+        if (!bot.state.getUser(uid)) return;
 
         await bot.send('z', {
             d: uid,
-            u: bot.loginInfo.i,
+            u: bot.state.loginInfo.i,
             t: '/aon'
         });
     }

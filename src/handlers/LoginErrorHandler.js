@@ -24,10 +24,10 @@ export default {
         if (packet.n) {
             await writeFile('./cache/login.json', JSON.stringify(packet)); // Save login info
 
-            bot.loginInfo = packet;
+            bot.state.loginInfo = packet;
 
-            if (bot.isLoggingIn) {
-                bot.isLoggingIn = false;
+            if (bot.state.isLoggingIn) {
+                bot.state.isLoggingIn = false;
                 bot.restart();
             }
         }

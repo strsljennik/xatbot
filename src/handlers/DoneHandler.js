@@ -7,6 +7,6 @@ export default {
      * @param {object} packet - Packet data
     */
     async execute (bot, packet) {
-        bot.isConnected = true;
+        bot.state.isConnected = true;
     }
 }

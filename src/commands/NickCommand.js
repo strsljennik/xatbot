@@ -13,7 +13,7 @@ export default {
 
         if (!message) {
             return await bot.reply(
-                `The current nick is: *${nick}*. To change it, use !nick [new nick]`,
+                `The current nick is: *${bot.state.settings.nick}*. To change it, use !nick [new nick]`,
                 xatID,
                 from
             );

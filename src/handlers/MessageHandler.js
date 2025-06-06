@@ -11,12 +11,20 @@ export default {
     async execute (bot, packet) {
         if (packet.s === "1" || packet.t[0] === "/") return;
 
-        if (packet.t[0] === bot.settings.char) {
-            await bot.commandHandler.handle(
-                packet.t, 
-                parseUser(packet.u), 
+        const userID = parseUser(packet.u);
+        const message = packet.t.trim();
+
+        if (!message) return;
+
+        if (message[0] === bot.state.settings.char) {
+            return await bot.commandHandler.handle(
+                message, 
+                userID, 
                 "main"
             );
         }
+
+        if (bot.state.settings.modFilters === 'on')
+            await bot.moderationFilters(userID, message);
     },
 };

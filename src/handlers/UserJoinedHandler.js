@@ -1,4 +1,5 @@
 import { parseUser } from "../utils/helpers.js";
+import { User } from "../core/User.js";
 
 export default {
     name: "u", // Packet name
@@ -13,25 +14,20 @@ export default {
         if (userId >= 1900000000) return;
 
         // Add user to cache
-        bot.users.set(userId, {
-            packet,
-            name: packet.n,
-            avatar: packet.a,
-            homepage: packet.h,
-            username: packet.N || null,
-        });
+        const user = new User(packet);
+        bot.state.addUser(userId, user);
 
         // Fetch necessary values
-        if (bot.settings.welcome_msg && bot.settings.welcome_msg != "off") {
-            const welcomeMessage = bot.settings.welcome_msg
-                .replace("{chatname}", bot.chatInfo.name)
-                .replace("{chatid}", bot.chatInfo.id)
-                .replace("{user}", packet.N || "Unregistered")
-                .replace("{name}", packet.n.split("##")[0].replace(/\([^()]*\)/g, ""))
+        if (bot.state.settings.welcome_msg && bot.state.settings.welcome_msg != "off" && !user.hasBeenHere()) {
+            const welcomeMessage = bot.state.settings.welcome_msg
+                .replace("{chatname}", bot.state.chatInfo.name)
+                .replace("{chatid}", bot.state.chatInfo.id)
+                .replace("{user}", user.getRegname() || "Unregistered")
+                .replace("{name}", user.getNick())
                 .replace("{uid}", userId);
 
             // Send message via PM/PC
-            await bot.reply(welcomeMessage, userId, bot.settings.welcome_type);
+            await bot.reply(welcomeMessage, userId, bot.state.settings.welcome_type);
         }
     },
 };

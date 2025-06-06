@@ -14,7 +14,7 @@ export default {
 
         if (!message) {
             return await bot.reply(
-                `Stealth mode is currently: ${bot.settings.stealth === "enable"
+                `Stealth mode is currently: ${bot.state.settings.stealth === "enable"
                     ? "*enabled*, To enable or disable it, use !stealth on/off."
                     : "*disabled*, To enable or disable it, use !stealth on/off."
                 }`,

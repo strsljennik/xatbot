@@ -13,7 +13,7 @@ export default {
 
         if (!message) {
             return await bot.reply(
-                `The current command char is: ${bot.settings.char}`, 
+                `The current command char is: ${bot.state.settings.char}`, 
                 xatID, 
                 from
             );
