@@ -40,9 +40,20 @@ export class Bot {
             }
 
             await this.getChatInfo();
-
             await this.packetHandler.init();
             await this.commandHandler.init();
+
+            try {
+                const data = await fs.readFile('./badwords.json', 'utf-8');
+                const allBadwords = JSON.parse(data);
+                const lang = (this.state.envData.language || 'en').toLowerCase();
+                if (lang === 'all') {
+                    const merged = Object.values(allBadwords).flat();
+                    this.state.badwords = Array.from(new Set(merged.map(w => (w || '').trim().toLowerCase()).filter(Boolean)));
+                } else {
+                    this.state.badwords = allBadwords[lang] || allBadwords['en'] || [];
+                }
+            } catch (e) { }
 
             await this.login();
             await this.connect();
@@ -323,18 +334,126 @@ export class Bot {
     async moderationFilters (userId, message) {
         if (!message || !userId) return;
 
-        try {
-            const result = await this.OpenAI.moderate(message);
-            const flags = this.OpenAI.constructor.parseModerationResult(result);
+        const capsLockDetect = this.state.settings.capsLockDetect ?? true;
+        const capsLockMax = Number(this.state.settings.capsLockMax) || 5;
+        const floodDetect = this.state.settings.floodDetect ?? true;
+        const linesMax = Number(this.state.settings.linesMax) || 4;
+        const spamDetect = this.state.settings.spamDetect ?? true;
+        const maxLetters = Number(this.state.settings.maxLetters) || 4;
+        const spamSmiliesDetect = this.state.settings.spamSmiliesDetect ?? true;
+        const maxSmilies = Number(this.state.settings.maxSmilies) || 4;
+        const linkDetect = this.state.settings.linkDetect ?? true;
+        const openAiDetect = this.state.settings.openAiDetect ?? true;
+        const inappDetect = this.state.settings.inappDetect ?? true;
+        const linkWhitelist = (this.state.settings.linkWhitelist || '').split(',').map(s => s.trim()).filter(Boolean);
 
-            if (flags.isFlagged) {
-                const flagged = Object.entries(flags)
-                    .filter(([k, v]) => k !== 'isFlagged' && v === true)
-                    .map(([k]) => k.replace(/^is/, ''));
-                const reason = `Mod Filter: [${flagged.join(', ') || 'Unknown'}]`;
-                await this.kick(userId, reason);
+        const now = Date.now();
+        let reason = null;
+
+        // Detect caps lock spam
+        if (capsLockDetect) {
+            const text = message.replace(/\s*\([^)]*\)/g, '').trim();
+            const caps = (text.match(/\b[A-Z]{2,}\b/g) || []).length;
+            if (caps > capsLockMax)
+                reason = `Too many words in caps (${caps}/${capsLockMax} allowed)`;
+        }
+
+        // Detect flood
+        if (!reason && floodDetect) {
+            if (this.state.lastMessageUserId !== userId || (now - this.state.lastMessageTimestamp > 30000))
+                this.state.usersFlood[userId] = 1;
+            else
+                this.state.usersFlood[userId] = (this.state.usersFlood[userId] || 0) + 1;
+
+            if (this.state.lastMessageUserId !== null && this.state.lastMessageUserId !== userId)
+                this.state.usersFlood[this.state.lastMessageUserId] = 0;
+
+            this.state.lastMessageUserId = userId;
+            this.state.lastMessageTimestamp = now;
+
+            if (this.state.usersFlood[userId] > linesMax) {
+                this.state.usersFlood[userId] = 0;
+                reason = `Flood detected: limit is ${linesMax} consecutive messages`;
             }
-        } catch (e) { }
+        }
+
+        // Detect letter spam
+        if (!reason && spamDetect) {
+            const text = message.replace(/\s*\([^)]*\)/g, '').trim();
+            for (const word of text.split(' ')) {
+                const w = word.toLowerCase().replace(/[- =+*~.,?!|&%\[\]{}k]/g, '');
+                if (w && new RegExp(`(.)\\1{${maxLetters},}`).test(w)) {
+                    reason = `Repeated letters detected (max ${maxLetters} consecutive)`;
+                    break;
+                }
+            }
+        }
+
+        // Detect smilies spam
+        if (!reason && spamSmiliesDetect) {
+            const text = message.toLowerCase().replace(/[^a-z :()]/g, '');
+            const smilies = [":)", ":d", ":p", ";)", ":s", ":$", ":@", ":'(", ":-*", ":("];
+            let smilieCount = 0;
+            for (const word of text.split(' ')) {
+                if (word) {
+                    if (word.startsWith('(') && !word.includes(' ')) smilieCount++;
+                    if (smilies.includes(word)) smilieCount++;
+                }
+            }
+            if (smilieCount > maxSmilies)
+                reason = `Too many smilies. Limit is ${maxSmilies} per message`;
+        }
+
+        // Detect links
+        if (!reason && linkDetect) {
+            const text = message.toLowerCase();
+            let allowed = false;
+            for (const wl of linkWhitelist) if (wl && text.includes(wl)) allowed = true;
+            if (!allowed && /(https?:\/\/|www\.|[a-z0-9-]+\.[a-z]{2,})/i.test(text))
+                reason = "Links are not allowed in chat";
+        }
+
+        // Detect inappropriate language
+        if (!reason && inappDetect && this.state.badwords.length > 0) {
+            const msgNorm = message.toLowerCase().normalize("NFKC");
+            for (const wordRaw of this.state.badwords) {
+                const word = (wordRaw || '').trim();
+                if (!word) continue;
+                let pattern;
+                if (word.includes(' ')) {
+                    const part = word
+                        .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                        .replace(/ +/g, '[\\s\\p{P}]+');
+                    pattern = new RegExp(`\\b${part}\\b`, 'iu');
+                } else {
+                    pattern = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'iu');
+                }
+                if (pattern.test(msgNorm)) {
+                    reason = `Inappropriate language detected`;
+                    break;
+                }
+            }
+        }
+
+        // OpenAI moderation
+        if (!reason && openAiDetect) {
+            try {
+                const result = await this.OpenAI.moderate(message);
+                const flags = this.OpenAI.constructor.parseModerationResult(result);
+                if (flags.isFlagged) {
+                    const flagged = Object.entries(flags)
+                        .filter(([k, v]) => k !== 'isFlagged' && v === true)
+                        .map(([k]) => k.replace(/^is/, ''));
+                    reason = `${flagged.join(', ') || 'No reason'}`;
+                }
+            } catch (e) { }
+        }
+
+        // Kick if any reason was found
+        if (reason) {
+            await this.kick(userId, reason);
+            return;
+        }
     }
 
     /**
