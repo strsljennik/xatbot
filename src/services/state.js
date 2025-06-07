@@ -3,16 +3,21 @@ export class BotState {
         this.ws = null;
         this.isLoggingIn = false;
         this.isConnected = false;
-        this.users = new Map();
         this.chatInfo = {};
+        this.badwords = {};
         this.loginInfo = {};
         this.settings = {};
         this.commands = {};
+        this.usersFlood = {};
+        this.users = new Map();
         this.userKicks = new Map();
+        this.lastMessageUserId = null;
+        this.lastMessageTimestamp = 0;
         this.envData = {
             username: process.env.BOT_USER,
             apiKey: process.env.BOT_APIKEY,
             chat: process.env.BOT_CHAT,
+            language: process.env.CHAT_LANGUAGE,
             websocketUrl: process.env.WEBSOCKET_URL,
             websocketOrigin: process.env.WEBSOCKET_ORIGIN,
             openaiApiKey: process.env.OPENAI_KEY,

@@ -10,9 +10,57 @@ export const Settings = sequelize.define("settings", {
         type: DataTypes.INTEGER,
         defaultValue: 1
     },
+    capsLockMax: {
+        type: DataTypes.INTEGER,
+        defaultValue: 6
+    },
+    linesMax: {
+        type: DataTypes.INTEGER,
+        defaultValue: 4
+    },
+    maxLetters: {
+        type: DataTypes.INTEGER,
+        defaultValue: 8
+    },
+    maxSmilies: {
+        type: DataTypes.INTEGER,
+        defaultValue: 4
+    },
     modFilters: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+    },
+    capsLockDetect: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+    },
+    floodDetect: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+    },
+    inappDetect: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+    },
+    spamDetect: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+    },
+    spamSmiliesDetect: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+    },
+    linkDetect: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+    },
+    openAiDetect: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+    },
+    linkWhitelist: {
         type: DataTypes.STRING,
-        defaultValue: "on"
+        defaultValue: "xat.wiki,xatblog.net,xatimg.com,xat.com,google.com,facebook.com,instagram.com,twitter.com,discord.gg,youtube.com"
     },
     char: {
         type: DataTypes.STRING,

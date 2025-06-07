@@ -1,232 +1,176 @@
-# Free xatbot
+# Free xat Bot
+A powerful, open-source moderation bot for xat chat rooms. Built with Node.js, featuring AI-powered moderation, automated management, and comprehensive admin tools.
 
-A powerful, open-source moderation and utility bot for xat.com chat rooms built with Node.js. Enhance your chat experience with automated features, AI-powered moderation, and comprehensive management tools.
+## Features
+- **AI-Powered Moderation** - Smart content filtering with OpenAI
+- **Automated Management** - Welcome messages, user tracking, activity monitoring
+- **Comprehensive Commands** - Extensive command system for chat administration
+- **Real-time Configuration** - Modify settings directly through chat
+- **Auto-Recovery** - Automatic reconnection and error handling
+- **Modern WebSocket** - Compatible with xat's latest implementation
 
-## 🌟 Features
+## Quick Setup
 
-- **AI-Powered Moderation**: Intelligent content filtering using OpenAI integration
-- **Automated User Management**: Welcome messages, user tracking, and activity monitoring  
-- **Comprehensive Command System**: Extensive set of commands for chat administration
-- **Real-time Configuration**: Modify bot settings directly through chat commands
-- **Persistent Data Storage**: SQLite database for settings and user data
-- **Advanced Permission System**: Secure owner-only commands with role-based access
-- **Auto-Recovery**: Automatic reconnection handling and error recovery
-- **Modern WebSocket Integration**: Compatible with xat's latest WebSocket implementation
-- **Extensive Logging**: Detailed console and file-based logging system
+### Requirements
+- Node.js 18+
+- xat account with API access
+- Admin powers in your target chat
 
-## 📋 Prerequisites
-
-- **Node.js**: Version 18.0 or higher
-- **NPM**: Package manager (comes with Node.js)
-- **xat Account**: Valid xat.com account with API access
-- **Chat Permissions**: Appropriate powers in your target chat room
-
-## 🚀 Quick Start
-
-### 1. Clone Repository
+### Installation
 ```bash
 git clone https://github.com/xlaming/free-xat-bot
 cd free-xat-bot
-```
-
-### 2. Install Dependencies
-```bash
 npm install
 ```
 
-### 3. Environment Configuration
-Create a `.env` file in the project root:
-
+### Configuration
+Rename `.env.example` to `.env` and edit the fields:
 ```env
-# Bot Account Credentials
 BOT_USER=your_xat_username
 BOT_APIKEY=your_xat_api_key
-
-# Target Chat Configuration
 BOT_CHAT=your_chat_name
-
-# Authorization (User IDs with admin access)
-BOT_OWNERS=[123456,789012]
-
-# Power Restrictions (Optional - Power IDs to disable)
+CHAT_LANGUAGE=all
+BOT_OWNERS=[42,281199,91667566]
 DISABLED_POWERS=[29]
-
-# AI Integration (Optional - For intelligent moderation)
-OPENAI_KEY=sk-your_openai_key_here
-
-# WebSocket Configuration (DO NOT MODIFY)
-WEBSOCKET_URL=wss://wss.xat.com/v2
+WEBSOCKET_URL=wss://bots.xat.com/v2
 WEBSOCKET_ORIGIN=https://xat.com
+OPENAI_KEY=""
 ```
 
-### 4. Launch Bot
+### Launch
 ```bash
-# Production mode
-npm run start
-
-# Development mode (auto-reload)
-npm run dev
+npm start
 ```
 
-## 🔧 Configuration Guide
+## Commands
 
-### Obtaining xat Credentials
+### Basic Commands
+| Command | Usage | Access | Description |
+|---------|-------|--------|-------------|
+| `!avatar` | `!avatar [url]` | Admin | Set bot avatar |
+| `!char` | `!char [character]` | Admin | Change bot character |
+| `!clear` | `!clear` | Admin | Clear chat (25 lines) |
+| `!commands` | `!commands` | Everyone | List all available commands |
+| `!home` | `!home [url]` / `!home clear` | Admin | Set or clear bot home link |
+| `!id` | `!id [regname]` | Everyone | Get xat ID from username |
+| `!info` | `!info` | Everyone | Show bot information |
+| `!nick` | `!nick [name]` | Admin | Change bot nickname |
+| `!pcback` | `!pcback on/off` | Admin | Toggle PCBack mode |
+| `!ping` | `!ping` | Everyone | Test bot latency |
+| `!pstyle` | `!pstyle [url]` | Admin | Set bot pstyle image |
+| `!reg` | `!reg [xat_id]` | Everyone | Get username from xat ID |
+| `!restart` | `!restart` | Admin | Restart the bot |
+| `!say` | `!say [message]` | Admin | Make bot send a message |
+| `!status` | `!status [message]` / `!status clear` | Admin | Set or clear bot status |
+| `!stealth` | `!stealth on/off` | Admin | Toggle stealth mode |
 
-1. **Username**: Your registered xat username for the bot account
-2. **API Key**: Available from xat's login interface after authentication
-3. **Chat Name**: Target chat room name (e.g., "help", "lobby")
+### Auto Welcome System
+| Command | Usage | Access | Description |
+|---------|-------|--------|-------------|
+| `!welcomemsg` | `!welcomemsg [message]` | Admin | Set welcome message (supports variables) |
+| `!welcometype` | `!welcometype pc/pm` | Admin | Set welcome message type (PC or PM) |
 
-### Setting Up Bot Owners
+### Moderation System
 
-Add user IDs to the `BOT_OWNERS` array for administrative access. Users can find their ID using the bot's lookup commands once running.
+#### Toggle Filters
+| Command | Description |
+|---------|-------------|
+| `!mod status on/off` | Enable/disable all moderation |
+| `!mod capslockdetect on/off` | Toggle CAPS lock filter |
+| `!mod flooddetect on/off` | Toggle flood filter |
+| `!mod spamdetect on/off` | Toggle letter spam filter |
+| `!mod spamsmiliesdetect on/off` | Toggle smiley spam filter |
+| `!mod linkdetect on/off` | Toggle link filter |
+| `!mod openaidetect on/off` | Toggle AI moderation filter |
+| `!mod inappdetect on/off` | Toggle AI moderation filter |
+
+#### Set Limits
+| Command | Description | Default |
+|---------|-------------|---------|
+| `!mod maxkicks [number]` | Max kicks before ban | 3 |
+| `!mod bantime [hours]` | Ban duration in hours | 1 |
+| `!mod capslockmax [number]` | Max CAPS letters allowed | 6 |
+| `!mod linesmax [number]` | Max messages in a row | 4 |
+| `!mod maxletters [number]` | Max repeated letters | 8 |
+| `!mod maxsmilies [number]` | Max smilies per message | 4 |
+
+#### Link Whitelist
+| Command | Description |
+|---------|-------------|
+| `!mod linkwhitelist` | Show whitelisted domains |
+| `!mod linkwhitelist add [domain]` | Add domain to whitelist |
+| `!mod linkwhitelist remove [domain]` | Remove domain from whitelist |
+
+## Configuration Guide
+
+### Getting Credentials
+- **Username**: Your registered xat username for the bot account
+- **API Key**: Available from xat's login interface after authentication
+- **Chat Name**: Target chat room name (e.g., "help", "lobby")
+
+### Bot Owners
+Add user IDs to `BOT_OWNERS` array for admin access. 
+
+Find IDs using `!id username` command.
 
 ### Power Management
+Configure `DISABLED_POWERS` to restrict certain xat powers. 
 
-Configure `DISABLED_POWERS` to restrict certain xat powers. Power ID 29 (ban) is disabled by default for security.
+Power ID 29 (invisible) is disabled by default.
 
-## 🎯 Command System
+## Troubleshooting
 
-The bot features an extensive command system with role-based permissions:
+**Connection Issues**
+- Verify credentials and API key
+- Check chat permissions and accessibility
+- Review WebSocket configuration
 
-- **Everyone Commands**: Available to all users (information, utilities)
-- **Admin Commands**: Owner-only access (moderation, configuration)
+**Command Problems**
+- Ensure user ID is in `BOT_OWNERS` array
+- Verify command syntax and bot permissions
+- Check console logs for errors
 
-All commands use a configurable prefix (default: `!`) and support dynamic help generation.
+**Database Errors**
+- Delete `database.db` to reset
+- Check file permissions
 
-## 🔌 API Integration
+## Security
 
-### xatBlog API
-- User/ID resolution services
-- Chat information retrieval  
-- Power data and utilities
-- Extended functionality for advanced features
+- Never share `.env` files or credentials
+- Limit `BOT_OWNERS` to trusted users only
+- Keep dependencies updated
 
-### OpenAI Integration (Optional)
-- Intelligent content moderation
-- Context-aware filtering
+## Development
 
-## 🛠️ Development & Customization
-
-### Creating Custom Commands
-
-1. Create a new file in `src/commands/`
-2. Follow the established command structure:
-
+### Custom Commands
+Create new files in `src/commands/`:
 ```javascript
 export default {
     name: "commandname",
     
     async execute(bot, xatID, message, from) {
-        // Permission check
         if (!bot.hasPermission(xatID, from)) {
             return bot.reply("Insufficient permissions", xatID, from);
         }
         
-        // Command logic
         await bot.reply("Command response", xatID, from);
     }
 };
 ```
 
-3. Restart the bot to load new commands
+## Contributing
 
-### Available Utilities
+1. Fork the repository
+2. Create feature branch
+3. Test thoroughly
+4. Submit pull request
 
-The `src/api` directory contains numerous helper functions for:
-- User management and lookup
-- Chat operations and moderation
-- Database interactions
-- WebSocket communication
-- Logging and error handling
+## License
 
-## 📊 Logging & Monitoring
+MIT License - see [LICENSE](LICENSE) file.
 
-### Logging Features
-- **Console Output**: Color-coded real-time logging
-- **File Logging**: Persistent logs in `logs/app.log`
-- **Error Tracking**: Detailed error reporting and stack traces
+## Support
 
-### Monitoring Capabilities
-- User activity tracking
-- Command execution statistics
-- Connection health monitoring
-- Automated error recovery logging
-
-## 🔍 Troubleshooting
-
-### Connection Issues
-- Verify xat credentials and API key validity
-- Confirm chat accessibility and bot permissions
-- Check network connectivity and firewall settings
-- Review WebSocket configuration (do not modify URLs)
-
-### Command Problems
-- Ensure user ID is in `BOT_OWNERS` array
-- Verify command prefix and syntax
-- Check bot permissions in target chat
-- Review console logs for detailed error information
-
-### Database Errors
-- Delete `database.db` to reset and recreate tables
-- Verify file system permissions
-- Ensure SQLite3 installation integrity
-
-### Performance Issues
-- Monitor memory usage and connection stability
-- Review log files for recurring errors
-- Check AI API rate limits and quotas
-- Verify Node.js version compatibility
-
-## 🔒 Security Considerations
-
-### Best Practices
-- **Never share**: `.env` files, `database.db`, or login credentials
-- **Restrict access**: Limit `BOT_OWNERS` to trusted individuals only
-- **Regular updates**: Keep dependencies and Node.js current
-- **Monitor usage**: Review logs for suspicious activity
-
-### Protected Files
-The `.gitignore` configuration excludes sensitive files:
-- Environment variables (`.env`)
-- Database files (`database.db`)  
-- Cache and temporary files
-- Log files and credentials
-
-## 🤝 Contributing
-
-We welcome contributions! Please follow these guidelines:
-
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/new-feature`)
-3. **Test** thoroughly before committing
-4. **Follow** existing code style and conventions
-5. **Submit** a pull request with detailed description
-
-### Development Guidelines
-- Use modern JavaScript (ES6+) features
-- Follow consistent naming conventions
-- Include appropriate error handling
-- Add comments for complex logic
-- Test with various chat scenarios
-
-## 📜 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for complete details.
-
-## 🙏 Acknowledgments
-
+- **Website**: [bot.xatblog.net](https://bot.xatblog.net)
+- **Issues**: [GitHub Issues](https://github.com/xlaming/free-xat-bot/issues)
 - **Developer**: @xlaming
-- **API Services**: [xatBlog API](https://api.xatblog.net/)
-- **Technologies**: Node.js, WebSocket, Sequelize, Winston, OpenAI
-- **Community**: Contributors and beta testers
-
-## 📞 Support & Resources
-
-- **Project Website**: [bot.xatblog.net](https://bot.xatblog.net)
-- **Issue Tracker**: [GitHub Issues](https://github.com/xlaming/free-xat-bot/issues)
-- **Documentation**: Complete guides and API references
-- **Community**: Active support community
-
----
-
-**Ready to enhance your xat chat experience? Get started today!**

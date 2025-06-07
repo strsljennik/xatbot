@@ -24,7 +24,7 @@ export default {
             );
         }
 
-        if (bot.state.settings.modFilters === 'on')
+        if (bot.state.settings.modFilters)
             await bot.moderationFilters(userID, message);
     },
 };

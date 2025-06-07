@@ -77,118 +77,6 @@ export class User {
     }
 
     /**
-     * Gets the pcplus setting.
-     * @return {string}
-     */
-    getPcplus () {
-        return this.pcplus;
-    }
-
-    /**
-     * Gets the avatar effect.
-     * @return {string}
-     */
-    getAvatareffect () {
-        return this.avatareffect;
-    }
-
-    /**
-     * Gets the avatar frame.
-     * @return {string}
-     */
-    getAvatarframe () {
-        return this.avatarframe;
-    }
-
-    /**
-     * Gets the avatar speed.
-     * @return {string}
-     */
-    getAvatarspeed () {
-        return this.avatarspeed;
-    }
-
-    /**
-     * Gets the avatar color.
-     * @return {string}
-     */
-    getAvatarcolor () {
-        return this.avatarcolor;
-    }
-
-    /**
-     * Gets the stealth setting.
-     * @return {string}
-     */
-    getStealth () {
-        return this.stealth;
-    }
-
-    /**
-     * Gets the statusfx effect.
-     * @return {string}
-     */
-    getStatusfxEffect () {
-        return this.statusfx_effect;
-    }
-
-    /**
-     * Gets the statusfx speed.
-     * @return {string}
-     */
-    getStatusfxSpeed () {
-        return this.statusfx_speed;
-    }
-
-    /**
-     * Gets the statusfx status2.
-     * @return {string}
-     */
-    getStatusfxStatus2 () {
-        return this.statusfx_status2;
-    }
-
-    /**
-     * Gets the statusfx wave frequency.
-     * @return {string}
-     */
-    getStatusfxWaveFrequency () {
-        return this.statusfx_wave_frequency;
-    }
-
-    /**
-     * Gets the pstyle image.
-     * @return {string}
-     */
-    getPstyleImage () {
-        return this.pstyle_image;
-    }
-
-    /**
-     * Gets the pstyle color.
-     * @return {string}
-     */
-    getPstyleColor () {
-        return this.pstyle_color;
-    }
-
-    /**
-     * Gets the pstyle icons.
-     * @return {string}
-     */
-    getPstyleIcons () {
-        return this.pstyle_icons;
-    }
-
-    /**
-     * Gets the pstyle gradient.
-     * @return {string}
-     */
-    getPstyleGrad () {
-        return this.pstyle_grad;
-    }
-
-    /**
      * Gets the flag0 value.
      * @return {number}
      */
@@ -197,7 +85,7 @@ export class User {
     }
 
     /**
-     * Gets the revision value.
+     * Gets the rev value.
      * @return {number}
      */
     getRev () {
@@ -248,19 +136,27 @@ export class User {
     }
 
     /**
+     * Checks if the user is on xat.
+     * @return {boolean}
+     */
+    onXat () {
+        return (this.qflags & 1) !== 0;
+    }
+
+    /**
+     * Checks if the user has gifts.
+     * @return {boolean}
+     */
+    hasGifts () {
+        return (this.aflags & (1 << 24)) !== 0;
+    }
+
+    /**
      * Checks if the user was here.
      * @return {boolean}
      */
     hasBeenHere () {
         return this.wasHere;
-    }
-
-    /**
-     * Checks if the user is married.
-     * @return {boolean}
-     */
-    isMarried () {
-        return this.getBride() !== 0;
     }
 
     /**
@@ -376,22 +272,6 @@ export class User {
     }
 
     /**
-     * Checks if the user is mobile.
-     * @return {boolean}
-     */
-    isMobile () {
-        return !this.onXat();
-    }
-
-    /**
-     * Checks if the user is on xat.
-     * @return {boolean}
-     */
-    onXat () {
-        return (this.qflags & 1) !== 0;
-    }
-
-    /**
      * Checks if the user is bannished.
      * @return {boolean}
      */
@@ -480,19 +360,19 @@ export class User {
     }
 
     /**
+    * Checks if the user is married.
+    * @return {boolean}
+    */
+    isMarried () {
+        return this.getBride() !== 0;
+    }
+
+    /**
      * Checks if the user is red carded.
      * @return {boolean}
      */
     isRedCarded () {
         return (this.aflags & (1 << 21)) !== 0;
-    }
-
-    /**
-     * Checks if the user has gifts.
-     * @return {boolean}
-     */
-    hasGifts () {
-        return (this.aflags & (1 << 24)) !== 0;
     }
 
     /**
