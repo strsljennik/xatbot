@@ -82,7 +82,7 @@ npm start
 | `!mod spamsmiliesdetect on/off` | Toggle smiley spam filter |
 | `!mod linkdetect on/off` | Toggle link filter |
 | `!mod openaidetect on/off` | Toggle AI moderation filter |
-| `!mod inappdetect on/off` | Toggle AI moderation filter |
+| `!mod inappdetect on/off` | Toggle inappropriate message filter |
 
 #### Set Limits
 | Command | Description | Default |
