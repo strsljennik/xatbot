@@ -136,6 +136,14 @@ export class User {
     }
 
     /**
+     * Gets the user's rank (0=guest, 1=main, 2=mod, 3=member, 4=owner).
+     * @return {number}
+     */
+    getRank () {
+        return this.flag0 & 7;
+    }
+
+    /**
      * Checks if the user is on xat.
      * @return {boolean}
      */
@@ -165,14 +173,6 @@ export class User {
      */
     isGamebanned () {
         return ![176, 184, 0].includes(this.gameban);
-    }
-
-    /**
-     * Gets the user's rank (0=guest, 1=main, 2=mod, 3=member, 4=owner).
-     * @return {number}
-     */
-    getRank () {
-        return this.flag0 & 7;
     }
 
     /**
