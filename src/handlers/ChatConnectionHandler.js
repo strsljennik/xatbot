@@ -86,7 +86,7 @@ export default {
                         avatarcolor: bot.state.settings.avatarcolor,
                     })
                 ).toString("base64"),
-                Stealth: bot.state.settings.stealth === "on" ? "enable" : "disable",
+                Stealth: bot.state.settings.stealth ? "enable" : "disable",
                 StatusFx: Buffer.from(
                     JSON.stringify({
                         effect: bot.state.settings.statusfx_effect,
