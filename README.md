@@ -14,7 +14,7 @@ A powerful, open-source moderation bot for xat chat rooms. Built with Node.js, f
 ### Requirements
 - Node.js 18+
 - xat account with API access
-- Admin powers in your target chat
+- (bot) assigned in your target chat
 
 ### Installation
 ```bash
