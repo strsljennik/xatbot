@@ -34,7 +34,7 @@ app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
             { user: process.env.BOT_USER_6 || process.env.BOT_USER, key: process.env.BOT_APIKEY }
         ];
 
-        // Startuj botove serijski da se izbegne SQLITE_BUSY
+        // Startuj botove serijski sa malim delay-om
         for (const g of guestBots) {
             console.log(`Starting guest bot: ${g.user}`);
             await new Bot({
@@ -42,6 +42,7 @@ app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
                 apikey: g.key,
                 chat: process.env.BOT_CHAT
             });
+            await new Promise(r => setTimeout(r, 200)); // 200ms pauza između botova
         }
 
         console.log("All bots started successfully!");
