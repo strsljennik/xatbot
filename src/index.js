@@ -1,37 +1,52 @@
 import { config } from 'dotenv';
+import express from 'express';
 import { sequelize } from './core/Database.js';
 import { Bot } from './core/Bot.js';
-import express from 'express';
 
 config();
 
+// Dummy Express server za Render
+const app = express();
+const PORT = process.env.PORT || 10000;
+app.get('/', (req, res) => res.send('Bot server running'));
+app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+
 (async () => {
-    await sequelize.authenticate();
-    await sequelize.sync();
+    try {
+        // Konektuj bazu
+        await sequelize.authenticate();
+        await sequelize.sync();
 
-    // Dummy HTTP server da Render ne prijavljuje timeout
-    const app = express();
-    const PORT = process.env.PORT || 3000;
-    app.get('/', (req, res) => res.send('Bot is running'));
-    app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+        // Pokreni admin bota
+        console.log("Starting admin bot...");
+        await new Bot({
+            username: process.env.BOT_USER,
+            apikey: process.env.BOT_APIKEY,
+            chat: process.env.BOT_CHAT
+        });
 
-    // Admin bot
-    const mainBot = new Bot({
-        username: process.env.BOT_USER,
-        apikey: process.env.BOT_APIKEY,
-        chat: process.env.BOT_CHAT
-    });
+        // Definiši guest botove (svi koriste isti API key)
+        const guestBots = [
+            { user: process.env.BOT_USER_2 || process.env.BOT_USER, key: process.env.BOT_APIKEY },
+            { user: process.env.BOT_USER_3 || process.env.BOT_USER, key: process.env.BOT_APIKEY },
+            { user: process.env.BOT_USER_4 || process.env.BOT_USER, key: process.env.BOT_APIKEY },
+            { user: process.env.BOT_USER_5 || process.env.BOT_USER, key: process.env.BOT_APIKEY },
+            { user: process.env.BOT_USER_6 || process.env.BOT_USER, key: process.env.BOT_APIKEY }
+        ];
 
-    // Obični botovi (bez komandi, samo da se pojave u chat-u)
-    const guestBots = [
-        { user: process.env.BOT_USER_2, key: process.env.BOT_APIKEY_2 },
-        { user: process.env.BOT_USER_3, key: process.env.BOT_APIKEY_3 },
-        { user: process.env.BOT_USER_4, key: process.env.BOT_APIKEY_4 },
-        { user: process.env.BOT_USER_5, key: process.env.BOT_APIKEY_5 },
-        { user: process.env.BOT_USER_6, key: process.env.BOT_APIKEY_6 },
-    ];
+        // Startuj botove serijski da se izbegne SQLITE_BUSY
+        for (const g of guestBots) {
+            console.log(`Starting guest bot: ${g.user}`);
+            await new Bot({
+                username: g.user,
+                apikey: g.key,
+                chat: process.env.BOT_CHAT
+            });
+        }
 
-    guestBots.forEach(g => {
-        new Bot({ username: g.user, apikey: g.key, chat: process.env.BOT_CHAT });
-    });
+        console.log("All bots started successfully!");
+    } catch (error) {
+        console.error("Error initializing bots:", error);
+        process.exit(1);
+    }
 })();
