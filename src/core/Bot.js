@@ -30,10 +30,13 @@ export class Bot {
      * Initializes the bot, loads settings, logs in,
      * and connects to the chat server.
      */
-   async init() {
-    try {
-        await this.getFromDb();
 
+async init() {
+    try {
+        // Učitaj podešavanja iz baze
+        this.state.settings = await Settings.findOne({ where: { id: 1 } });
+
+        // Ako nema podešavanja, kreiraj default
         if (!this.state.settings) {
             await Settings.findOrCreate({
                 where: { id: 1 },
@@ -50,17 +53,20 @@ export class Bot {
                     inappDetect: true,
                     linkWhitelist: "",
                     capsLockDetect: true,
-                    capsLockMax: 6,
-                    bantime: 1
+                    capsLockMax: 6
+                    // bantime je uklonjen
                 }
             });
-            await this.getFromDb();
+
+            // Ponovo učitaj settings
+            this.state.settings = await Settings.findOne({ where: { id: 1 } });
         }
 
         await this.getChatInfo();
         await this.packetHandler.init();
         await this.commandHandler.init();
 
+        // Učitaj listu zabranjenih reči
         try {
             const data = await fs.readFile('./badwords.json', 'utf-8');
             const allBadwords = JSON.parse(data);
@@ -81,6 +87,8 @@ export class Bot {
         process.exit(1);
     }
 }
+
+
    /**
      * Log in to xat.
      */
