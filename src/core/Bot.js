@@ -30,66 +30,41 @@ export class Bot {
      * Initializes the bot, loads settings, logs in,
      * and connects to the chat server.
      */
-
-async init() {
-    try {
-        // Učitaj podešavanja iz baze
-        this.state.settings = await Settings.findOne({ where: { id: 1 } });
-
-        // Ako nema podešavanja, kreiraj default
-        if (!this.state.settings) {
-            await Settings.findOrCreate({
-                where: { id: 1 },
-                defaults: {
-                    maxKicks: 3,
-                    floodDetect: true,
-                    linesMax: 4,
-                    spamDetect: true,
-                    maxLetters: 4,
-                    spamSmiliesDetect: true,
-                    maxSmilies: 4,
-                    linkDetect: true,
-                    openAiDetect: true,
-                    inappDetect: true,
-                    linkWhitelist: "",
-                    capsLockDetect: true,
-                    capsLockMax: 6
-                    // bantime je uklonjen
-                }
-            });
-
-            // Ponovo učitaj settings
-            this.state.settings = await Settings.findOne({ where: { id: 1 } });
-        }
-
-        await this.getChatInfo();
-        await this.packetHandler.init();
-        await this.commandHandler.init();
-
-        // Učitaj listu zabranjenih reči
+    async init () {
         try {
-            const data = await fs.readFile('./badwords.json', 'utf-8');
-            const allBadwords = JSON.parse(data);
-            const lang = (this.state.envData.language || 'en').toLowerCase();
-            if (lang === 'all') {
-                const merged = Object.values(allBadwords).flat();
-                this.state.badwords = Array.from(new Set(merged.map(w => (w || '').trim().toLowerCase()).filter(Boolean)));
-            } else {
-                this.state.badwords = allBadwords[lang] || allBadwords['en'] || [];
+            await this.getFromDb();
+
+            if (!this.state.settings) {
+                await Settings.create({ id: 1 });
+                await this.getFromDb();
             }
-        } catch (e) { }
 
-        await this.login();
-        await this.connect();
-        await this.keepRunning();
-    } catch (error) {
-        this.logger.error(`Init error: ${error.message} - ${error.stack}`);
-        process.exit(1);
+            await this.getChatInfo();
+            await this.packetHandler.init();
+            await this.commandHandler.init();
+
+            try {
+                const data = await fs.readFile('./badwords.json', 'utf-8');
+                const allBadwords = JSON.parse(data);
+                const lang = (this.state.envData.language || 'en').toLowerCase();
+                if (lang === 'all') {
+                    const merged = Object.values(allBadwords).flat();
+                    this.state.badwords = Array.from(new Set(merged.map(w => (w || '').trim().toLowerCase()).filter(Boolean)));
+                } else {
+                    this.state.badwords = allBadwords[lang] || allBadwords['en'] || [];
+                }
+            } catch (e) { }
+
+            await this.login();
+            await this.connect();
+            await this.keepRunning();
+        } catch (error) {
+            this.logger.error(`Init error: ${error.message} - ${error.stack}`);
+            process.exit(1);
+        }
     }
-}
 
-
-   /**
+    /**
      * Log in to xat.
      */
     async login () {
