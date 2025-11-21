@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const url = 'https://radiogalaksija.onrender.com/';
+const url = 'https://bot-n4w1.onrender.com';
 
 const pingService = async () => {
   try {
